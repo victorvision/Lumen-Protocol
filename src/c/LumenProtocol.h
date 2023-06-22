@@ -1,5 +1,5 @@
-#ifndef DATAFRAMEPROTOCOL_H_
-#define DATAFRAMEPROTOCOL_H_
+#ifndef LUMEN_PROTOCOL_H_
+#define LUMEN_PROTOCOL_H_
 
 #if defined(__cplusplus)
 extern "C"
@@ -10,7 +10,7 @@ extern "C"
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "DataFrameProtocolConfiguration.h"
+#include "LumenProtocolConfiguration.h"
 
 #define DATA_NULL 0xFFFF
 
@@ -26,7 +26,7 @@ extern "C"
     float _float;
     double _double;
     char _string[MAX_STRING_SIZE];
-  } data_t;
+  } lumen_data_t;
 
   typedef enum data_type {
     kBool,
@@ -40,22 +40,22 @@ extern "C"
     kFloat,
     kDouble,
     kString,
-  } data_type_t;
+  } lumen_data_type_t;
 
   typedef struct {
     uint16_t address;
-    data_type_t type;
-    data_t data;
-  } package_t;
+    lumen_data_type_t type;
+    lumen_data_t data;
+  } lumen_package_t;
 
-  uint32_t data_frame_write(uint16_t address, uint8_t *data, uint32_t length);
-  uint32_t data_frame_write_package(package_t *package);
-  uint32_t data_frame_available();
-  bool data_frame_read(package_t *package);
-  package_t *data_frame_get_first_package();
+  uint32_t lumen_write(uint16_t address, uint8_t *data, uint32_t length);
+  uint32_t lumen_write_package(lumen_package_t *package);
+  uint32_t lumen_available();
+  bool lumen_read(lumen_package_t *package);
+  lumen_package_t *lumen_get_first_package();
   
 #if defined(__cplusplus)
 }
 #endif
 
-#endif /* DATAFRAMEPROTOCOL_H_ */
+#endif /* LUMEN_PROTOCOL_H_ */

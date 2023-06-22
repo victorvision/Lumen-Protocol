@@ -1,8 +1,8 @@
-#include "DataFrameProtocol.h"
+#include "LumenProtocol.h"
 #include <Arduino.h>
 
-extern void data_frame_write_bytes(uint8_t *data, uint32_t length);
-extern uint16_t data_frame_get_byte();
+extern void lumen_write_bytes(uint8_t *data, uint32_t length);
+extern uint16_t lumen_get_byte();
 
 typedef union {
   struct
@@ -87,7 +87,7 @@ typedef enum {
 
 static uint8_t quantityOfPackagesAvailable = 0;
 
-static package_t packages[QUANTITY_OF_PACKAGES];
+static lumen_package_t packages[QUANTITY_OF_PACKAGES];
 static bool ocupiedSlots[QUANTITY_OF_PACKAGES];
 
 #if kUseCRC
@@ -104,7 +104,7 @@ static uint32_t _command;
 static u16_union_t _address;
 static PayloadIndex_t _payloadIndex;
 
-package_t *readingPackage;
+lumen_package_t *readingPackage;
 static bool reading = false;
 
 #if kUseCRC
@@ -130,7 +130,7 @@ void CalculateCRC(uint16_t data) {
 }
 #endif
 
-uint32_t data_frame_write(uint16_t address, uint8_t *data, uint32_t length) {
+uint32_t lumen_write(uint16_t address, uint8_t *data, uint32_t length) {
   static uint32_t outDataindex;
   outDataindex = 0;
 
@@ -223,16 +223,16 @@ uint32_t data_frame_write(uint16_t address, uint8_t *data, uint32_t length) {
   _dataOut[outDataindex] = END_FLAG;
   ++outDataindex;
 
-  data_frame_write_bytes(_dataOut, outDataindex);
+  lumen_write_bytes(_dataOut, outDataindex);
 
   return outDataindex;
 }
 
-uint32_t data_frame_write_package(package_t *package) {
+uint32_t lumen_write_package(lumen_package_t *package) {
   switch (package->type) {
     case kBool:
       {
-        data_frame_write(package->address, (uint8_t *)package->data._string, 1);
+        lumen_write(package->address, (uint8_t *)package->data._string, 1);
       }
       break;
     case kString:
@@ -244,52 +244,52 @@ uint32_t data_frame_write_package(package_t *package) {
           }
         }
 
-        data_frame_write(package->address, (uint8_t *)package->data._string, length);
+        lumen_write(package->address, (uint8_t *)package->data._string, length);
       }
       break;
     case kChar:
       {
-        data_frame_write(package->address, (uint8_t *)package->data._string, 1);
+        lumen_write(package->address, (uint8_t *)package->data._string, 1);
       }
       break;
     case kU8:
       {
-        data_frame_write(package->address, (uint8_t *)package->data._string, 1);
+        lumen_write(package->address, (uint8_t *)package->data._string, 1);
       }
       break;
     case kS8:
       {
-        data_frame_write(package->address, (uint8_t *)package->data._string, 1);
+        lumen_write(package->address, (uint8_t *)package->data._string, 1);
       }
       break;
     case kU16:
       {
-        data_frame_write(package->address, (uint8_t *)package->data._string, 2);
+        lumen_write(package->address, (uint8_t *)package->data._string, 2);
       }
       break;
     case kS16:
       {
-        data_frame_write(package->address, (uint8_t *)package->data._string, 2);
+        lumen_write(package->address, (uint8_t *)package->data._string, 2);
       }
       break;
     case kU32:
       {
-        data_frame_write(package->address, (uint8_t *)package->data._string, 4);
+        lumen_write(package->address, (uint8_t *)package->data._string, 4);
       }
       break;
     case kS32:
       {
-        data_frame_write(package->address, (uint8_t *)package->data._string, 4);
+        lumen_write(package->address, (uint8_t *)package->data._string, 4);
       }
       break;
     case kFloat:
       {
-        data_frame_write(package->address, (uint8_t *)package->data._string, 4);
+        lumen_write(package->address, (uint8_t *)package->data._string, 4);
       }
       break;
     case kDouble:
       {
-        data_frame_write(package->address, (uint8_t *)package->data._string, 8);
+        lumen_write(package->address, (uint8_t *)package->data._string, 8);
       }
       break;
     default:
@@ -388,7 +388,7 @@ void Empack() {
   }
 }
 
-uint32_t data_frame_available() {
+uint32_t lumen_available() {
   static bool _started;
   static bool _scaped;
 #if kUseCRC
@@ -398,7 +398,7 @@ uint32_t data_frame_available() {
   static uint16_t _crcData[3];
 #endif
 
-  receivedData = data_frame_get_byte();
+  receivedData = lumen_get_byte();
 
   while (receivedData != 0xFFFF) {
     if (receivedData == START_FLAG) {
@@ -448,13 +448,13 @@ uint32_t data_frame_available() {
         ParsePayload();
       }
     }
-    receivedData = data_frame_get_byte();
+    receivedData = lumen_get_byte();
   }
 
   return quantityOfPackagesAvailable;
 }
 
-package_t *data_frame_get_first_package() {
+lumen_package_t *lumen_get_first_package() {
   for (uint8_t i = 0; i < QUANTITY_OF_PACKAGES; ++i) {
     if (ocupiedSlots[i]) {
       ocupiedSlots[i] = false;
@@ -465,7 +465,7 @@ package_t *data_frame_get_first_package() {
   return NULL;
 }
 
-bool data_frame_read(package_t *package) {
+bool lumen_read(lumen_package_t *package) {
   static uint32_t outDataindex;
 
   readingPackage = package;
@@ -542,12 +542,12 @@ bool data_frame_read(package_t *package) {
   ++outDataindex;
 
   reading = true;
-  data_frame_write_bytes(_dataOut, outDataindex);
+  lumen_write_bytes(_dataOut, outDataindex);
 
   uint32_t elapsedTickTimeOut = 0;
 
   while (reading == true) {
-    data_frame_available();
+    lumen_available();
 
     ++elapsedTickTimeOut;
 

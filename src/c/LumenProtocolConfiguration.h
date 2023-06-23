@@ -2,11 +2,11 @@
 #define LUMEN_PROTOCOL_CONFIGURATION_H_
 
 #define MAX_STRING_SIZE 11
-#define QUANTITY_OF_PACKAGES 10
+#define QUANTITY_OF_PACKETS 10
 
 #define TICK_TIME_OUT 0xFFFF
 
-#define USE_CRC true
+#define USE_CRC false
 
 #define START_FLAG 0x12
 #define END_FLAG 0x13

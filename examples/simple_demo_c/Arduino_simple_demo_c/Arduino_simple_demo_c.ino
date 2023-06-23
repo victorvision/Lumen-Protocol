@@ -11,9 +11,9 @@ extern "C" uint16_t lumen_get_byte() {
   return DATA_NULL;
 }
 
-lumen_package_t valor_2 = { 20, kS32};
+lumen_packet_t valor_2 = { 20, kS32};
 const int valor_1_address = 10;
-lumen_package_t *currentPackage;
+lumen_packet_t *currentPacket;
 
 void setup() {
   delay(1000);
@@ -26,12 +26,12 @@ void setup() {
 void loop() {
 
   while (lumen_available() > 0) {
-    currentPackage = lumen_get_first_package();
+    currentPacket = lumen_get_first_packet();
 
-    if (currentPackage != NULL) {
-      if (currentPackage->address == valor_1_address){
-        valor_2.data._s32 = currentPackage->data._s32;
-        lumen_write_package(&valor_2);
+    if (currentPacket != NULL) {
+      if (currentPacket->address == valor_1_address){
+        valor_2.data._s32 = currentPacket->data._s32;
+        lumen_write_packet(&valor_2);
       }
     }
   }

@@ -1,4 +1,5 @@
 #include "LumenProtocol.h"
+#include <Arduino.h>
 
 extern void lumen_write_bytes(uint8_t *data, uint32_t length);
 extern uint16_t lumen_get_byte();
@@ -84,10 +85,10 @@ typedef enum {
   kReadMultiplesVariables
 } Command_t;
 
-static uint8_t quantityOfPackagesAvailable = 0;
+static uint8_t quantityOfPacketsAvailable = 0;
 
-static lumen_package_t packages[QUANTITY_OF_PACKAGES];
-static bool ocupiedSlots[QUANTITY_OF_PACKAGES];
+static lumen_packet_t packets[QUANTITY_OF_PACKETS];
+static bool ocupiedSlots[QUANTITY_OF_PACKETS];
 
 #if kUseCRC
 static u16_union_t _crc;
@@ -103,7 +104,7 @@ static uint32_t _command;
 static u16_union_t _address;
 static PayloadIndex_t _payloadIndex;
 
-lumen_package_t *readingPackage;
+lumen_packet_t *readingPacket;
 static bool reading = false;
 
 #if kUseCRC
@@ -227,68 +228,68 @@ uint32_t lumen_write(uint16_t address, uint8_t *data, uint32_t length) {
   return outDataindex;
 }
 
-uint32_t lumen_write_package(lumen_package_t *package) {
-  switch (package->type) {
+uint32_t lumen_write_packet(lumen_packet_t *packet) {
+  switch (packet->type) {
     case kBool:
       {
-        lumen_write(package->address, (uint8_t *)package->data._string, 1);
+        lumen_write(packet->address, (uint8_t *)packet->data._string, 1);
       }
       break;
     case kString:
       {
         uint8_t length = 0;
         for (; length < MAX_STRING_SIZE ; ++length) {
-          if (package->data._string[length] != '\0') {
+          if (packet->data._string[length] != '\0') {
             break;
           }
         }
 
-        lumen_write(package->address, (uint8_t *)package->data._string, length);
+        lumen_write(packet->address, (uint8_t *)packet->data._string, length);
       }
       break;
     case kChar:
       {
-        lumen_write(package->address, (uint8_t *)package->data._string, 1);
+        lumen_write(packet->address, (uint8_t *)packet->data._string, 1);
       }
       break;
     case kU8:
       {
-        lumen_write(package->address, (uint8_t *)package->data._string, 1);
+        lumen_write(packet->address, (uint8_t *)packet->data._string, 1);
       }
       break;
     case kS8:
       {
-        lumen_write(package->address, (uint8_t *)package->data._string, 1);
+        lumen_write(packet->address, (uint8_t *)packet->data._string, 1);
       }
       break;
     case kU16:
       {
-        lumen_write(package->address, (uint8_t *)package->data._string, 2);
+        lumen_write(packet->address, (uint8_t *)packet->data._string, 2);
       }
       break;
     case kS16:
       {
-        lumen_write(package->address, (uint8_t *)package->data._string, 2);
+        lumen_write(packet->address, (uint8_t *)packet->data._string, 2);
       }
       break;
     case kU32:
       {
-        lumen_write(package->address, (uint8_t *)package->data._string, 4);
+        lumen_write(packet->address, (uint8_t *)packet->data._string, 4);
       }
       break;
     case kS32:
       {
-        lumen_write(package->address, (uint8_t *)package->data._string, 4);
+        lumen_write(packet->address, (uint8_t *)packet->data._string, 4);
       }
       break;
     case kFloat:
       {
-        lumen_write(package->address, (uint8_t *)package->data._string, 4);
+        lumen_write(packet->address, (uint8_t *)packet->data._string, 4);
       }
       break;
     case kDouble:
       {
-        lumen_write(package->address, (uint8_t *)package->data._string, 8);
+        lumen_write(packet->address, (uint8_t *)packet->data._string, 8);
       }
       break;
     default:
@@ -343,44 +344,44 @@ void Empack() {
   if (_command == READ_FLAG  ) {
 
     if (reading == true) {
-      if (_address.value == readingPackage->address) {
+      if (_address.value == readingPacket->address) {
 
         uint8_t dataSize = _dataIndex - kData;
 
         for (uint8_t i = 0; i < dataSize; ++i) {
-          readingPackage->data._string[i] = _dataIn[i + kData];
+          readingPacket->data._string[i] = _dataIn[i + kData];
         }
         reading = false;
         return;
       }
     }
 
-    for (uint8_t packageIndex = 0; packageIndex < QUANTITY_OF_PACKAGES; ++packageIndex) {
-      if (ocupiedSlots[packageIndex] == true) {
-        if (packages[packageIndex].address == _address.value) {
+    for (uint8_t packetIndex = 0; packetIndex < QUANTITY_OF_PACKETS; ++packetIndex) {
+      if (ocupiedSlots[packetIndex] == true) {
+        if (packets[packetIndex].address == _address.value) {
           uint8_t dataSize = _dataIndex - kData;
 
           for (uint8_t i = 0; i < dataSize; ++i) {
-            packages[packageIndex].data._string[i] = _dataIn[i + kData];
+            packets[packetIndex].data._string[i] = _dataIn[i + kData];
           }
           break;
         }
       }
     }
 
-    for (uint8_t packageIndex = 0; packageIndex < QUANTITY_OF_PACKAGES; ++packageIndex) {
-      if (ocupiedSlots[packageIndex] == false) {
+    for (uint8_t packetIndex = 0; packetIndex < QUANTITY_OF_PACKETS; ++packetIndex) {
+      if (ocupiedSlots[packetIndex] == false) {
 
-        packages[packageIndex].address = _address.value;
+        packets[packetIndex].address = _address.value;
 
         uint8_t dataSize = _dataIndex - kData;
 
         for (uint8_t i = 0; i < dataSize; ++i) {
-          packages[packageIndex].data._string[i] = _dataIn[i + kData];
+          packets[packetIndex].data._string[i] = _dataIn[i + kData];
         }
-        ocupiedSlots[packageIndex] = true;
+        ocupiedSlots[packetIndex] = true;
 
-        ++quantityOfPackagesAvailable;
+        ++quantityOfPacketsAvailable;
         break;
       }
     }
@@ -450,24 +451,24 @@ uint32_t lumen_available() {
     receivedData = lumen_get_byte();
   }
 
-  return quantityOfPackagesAvailable;
+  return quantityOfPacketsAvailable;
 }
 
-lumen_package_t *lumen_get_first_package() {
-  for (uint8_t i = 0; i < QUANTITY_OF_PACKAGES; ++i) {
+lumen_packet_t *lumen_get_first_packet() {
+  for (uint8_t i = 0; i < QUANTITY_OF_PACKETS; ++i) {
     if (ocupiedSlots[i]) {
       ocupiedSlots[i] = false;
-      --quantityOfPackagesAvailable;
-      return &packages[i];
+      --quantityOfPacketsAvailable;
+      return &packets[i];
     }
   }
   return NULL;
 }
 
-bool lumen_read(lumen_package_t *package) {
+bool lumen_read(lumen_packet_t *packet) {
   static uint32_t outDataindex;
 
-  readingPackage = package;
+  readingPacket = packet;
   outDataindex = 0;
 
   _dataOut[outDataindex] = START_FLAG;
@@ -480,7 +481,7 @@ bool lumen_read(lumen_package_t *package) {
 #endif
   ++outDataindex;
 
-  _dataOut[outDataindex] = readingPackage->address & 0xFF;
+  _dataOut[outDataindex] = readingPacket->address & 0xFF;
 #if kUseCRC
   CalculateCRC(_dataOut[outDataindex]);
 #endif
@@ -493,7 +494,7 @@ bool lumen_read(lumen_package_t *package) {
   }
   ++outDataindex;
 
-  _dataOut[outDataindex] = readingPackage->address >> 8;
+  _dataOut[outDataindex] = readingPacket->address >> 8;
 #if kUseCRC
   CalculateCRC(_dataOut[outDataindex]);
 #endif

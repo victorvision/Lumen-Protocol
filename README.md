@@ -11,7 +11,7 @@
 
 2. Provide your platform-specific implementation of `lumen_write_bytes` and `lumen_get_byte` functions:
 
-``` Arduino
+```cpp
 // Arduino Sketch example
 #include "LumenProtocol.h"
 
@@ -26,20 +26,21 @@ extern "C" uint16_t lumen_get_byte() {
   return DATA_NULL;
 }
 ```
+
 3. Implement receiving logic:
 
-``` Arduino
+```cpp
 // ...
 
 void loop() {
  while (lumen_available() > 0) {
-    currentPackage = lumen_get_first_package();
+    currentPacket = lumen_get_first_packet();
 
-    if (currentPackage == NULL) {
+    if (currentPacket == NULL) {
         break;
     }
 
-    // Do something with the new package
+    // Do something with the new packet
 }
 
 // ...

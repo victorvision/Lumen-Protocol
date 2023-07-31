@@ -90,7 +90,7 @@ static uint8_t quantityOfPacketsAvailable = 0;
 static lumen_packet_t packets[QUANTITY_OF_PACKETS];
 static bool ocupiedSlots[QUANTITY_OF_PACKETS];
 
-#if kUseCRC
+#if USE_CRC
 static u16_union_t _crc;
 #endif
 
@@ -107,7 +107,7 @@ static PayloadIndex_t _payloadIndex;
 lumen_packet_t *readingPacket;
 static bool reading = false;
 
-#if kUseCRC
+#if USE_CRC
 void CalculateCRC(uint16_t data) {
   static uint32_t pos;
   static uint32_t i;
@@ -130,6 +130,8 @@ void CalculateCRC(uint16_t data) {
 }
 #endif
 
+static uint8_t writeTempData;
+
 uint32_t lumen_write(uint16_t address, uint8_t *data, uint32_t length) {
   static uint32_t outDataindex;
   outDataindex = 0;
@@ -138,46 +140,39 @@ uint32_t lumen_write(uint16_t address, uint8_t *data, uint32_t length) {
   ++outDataindex;
 
   _dataOut[outDataindex] = WRITE_FLAG;
-#if kUseCRC
+#if USE_CRC
   _crc.value = 0xFFFF;
   CalculateCRC(_dataOut[outDataindex]);
 #endif
-  if (_dataOut[outDataindex] == START_FLAG || _dataOut[outDataindex] == END_FLAG || _dataOut[outDataindex] == ESCAPE_FLAG) {
-    _dataOut[outDataindex] = ESCAPE_FLAG;
-    ++outDataindex;
-    _dataOut[outDataindex] = _dataOut[outDataindex] ^ XOR_FLAG;
-  } else {
-    _dataOut[outDataindex] = _dataOut[outDataindex];
-  }
   ++outDataindex;
 
-  _dataOut[outDataindex] = address & 0xFF;
-#if kUseCRC
-  CalculateCRC(_dataOut[outDataindex]);
+  writeTempData = address & 0xFF;
+#if USE_CRC
+  CalculateCRC(tempData);
 #endif
-  if (_dataOut[outDataindex] == START_FLAG || _dataOut[outDataindex] == END_FLAG || _dataOut[outDataindex] == ESCAPE_FLAG) {
+  if (writeTempData == START_FLAG || writeTempData == END_FLAG || writeTempData == ESCAPE_FLAG) {
     _dataOut[outDataindex] = ESCAPE_FLAG;
     ++outDataindex;
-    _dataOut[outDataindex] = _dataOut[outDataindex] ^ XOR_FLAG ;
+    _dataOut[outDataindex] = writeTempData ^ XOR_FLAG;
   } else {
-    _dataOut[outDataindex] = _dataOut[outDataindex];
+    _dataOut[outDataindex] = writeTempData;
   }
   ++outDataindex;
 
-  _dataOut[outDataindex] = address >> 8;
-#if kUseCRC
-  CalculateCRC(_dataOut[outDataindex]);
+  writeTempData = address >> 8;
+#if USE_CRC
+  CalculateCRC(writeTempData);
 #endif
-  if (_dataOut[outDataindex] == START_FLAG || _dataOut[outDataindex] == END_FLAG || _dataOut[outDataindex] == ESCAPE_FLAG) {
+  if (writeTempData == START_FLAG || writeTempData == END_FLAG || writeTempData == ESCAPE_FLAG) {
     _dataOut[outDataindex] = ESCAPE_FLAG;
     ++outDataindex;
-    _dataOut[outDataindex] = _dataOut[outDataindex] ^ XOR_FLAG ;
+    _dataOut[outDataindex] = writeTempData ^ XOR_FLAG;
   } else {
-    _dataOut[outDataindex] = _dataOut[outDataindex];
+    _dataOut[outDataindex] = writeTempData;
   }
   ++outDataindex;
 
-#if kUseCRC
+#if USE_CRC
   for (uint16_t i = 0; i < length; i++) {
     CalculateCRC(data[i]);
   }
@@ -187,7 +182,7 @@ uint32_t lumen_write(uint16_t address, uint8_t *data, uint32_t length) {
     if (data[i] == START_FLAG || data[i] == END_FLAG || data[i] == ESCAPE_FLAG) {
       _dataOut[outDataindex] = ESCAPE_FLAG;
       ++outDataindex;
-      _dataOut[outDataindex] = data[i] ^ XOR_FLAG ;
+      _dataOut[outDataindex] = data[i] ^ XOR_FLAG;
       ++outDataindex;
     } else {
       _dataOut[outDataindex] = data[i];
@@ -195,12 +190,12 @@ uint32_t lumen_write(uint16_t address, uint8_t *data, uint32_t length) {
     }
   }
 
-#if kUseCRC
+#if USE_CRC
   if ((_crc.byte.low == (uint8_t)START_FLAG) || (_crc.byte.low == (uint8_t)END_FLAG)
       || (_crc.byte.low == (uint8_t)ESCAPE_FLAG)) {
     _dataOut[outDataindex] = ESCAPE_FLAG;
     ++outDataindex;
-    _dataOut[outDataindex] = _crc.byte.low ^ XOR_FLAG ;
+    _dataOut[outDataindex] = _crc.byte.low ^ XOR_FLAG;
     ++outDataindex;
   } else {
     _dataOut[outDataindex] = _crc.byte.low;
@@ -211,7 +206,7 @@ uint32_t lumen_write(uint16_t address, uint8_t *data, uint32_t length) {
       || (_crc.byte.high == (uint8_t)ESCAPE_FLAG)) {
     _dataOut[outDataindex] = ESCAPE_FLAG;
     ++outDataindex;
-    _dataOut[outDataindex] = _crc.byte.high ^ XOR_FLAG ;
+    _dataOut[outDataindex] = _crc.byte.high ^ XOR_FLAG;
     ++outDataindex;
   } else {
     _dataOut[outDataindex] = _crc.byte.high;
@@ -238,7 +233,7 @@ uint32_t lumen_write_packet(lumen_packet_t *packet) {
     case kString:
       {
         uint8_t length = 0;
-        for (; length < MAX_STRING_SIZE ; ++length) {
+        for (; length < MAX_STRING_SIZE; ++length) {
           if (packet->data._string[length] != '\0') {
             break;
           }
@@ -341,7 +336,7 @@ void ParsePayload() {
 void Empack() {
   Command_t command;
 
-  if (_command == READ_FLAG  ) {
+  if (_command == READ_FLAG) {
 
     if (reading == true) {
       if (_address.value == readingPacket->address) {
@@ -391,7 +386,7 @@ void Empack() {
 uint32_t lumen_available() {
   static bool _started;
   static bool _scaped;
-#if kUseCRC
+#if USE_CRC
   static bool _crcStarted;
   static uint16_t _crcIndex;
   static uint16_t _crcIndexDelayed;
@@ -403,7 +398,7 @@ uint32_t lumen_available() {
   while (receivedData != 0xFFFF) {
     if (receivedData == START_FLAG) {
 
-#if kUseCRC
+#if USE_CRC
       _crc.value = 0xFFFF;
       _crcIndex = 0;
       _crcStarted = false;
@@ -416,7 +411,7 @@ uint32_t lumen_available() {
 
     } else if (receivedData == END_FLAG) {
 
-#if kUseCRC
+#if USE_CRC
       _crc.value = 0xFFFF;
       uint16_t _dataIndexOffseted = _dataIndex - 2;
 
@@ -438,7 +433,7 @@ uint32_t lumen_available() {
       _payloadIndex = kPayloadNull;
     } else if (_started) {
       if (_scaped) {
-        receivedData ^= XOR_FLAG ;
+        receivedData ^= XOR_FLAG;
         _scaped = false;
         ParsePayload();
       } else if (receivedData == ESCAPE_FLAG) {
@@ -474,51 +469,51 @@ bool lumen_read(lumen_packet_t *packet) {
   _dataOut[outDataindex] = START_FLAG;
   ++outDataindex;
 
-  _dataOut[outDataindex] = READ_FLAG  ;
-#if kUseCRC
+  _dataOut[outDataindex] = READ_FLAG;
+#if USE_CRC
   _crc.value = 0xFFFF;
   CalculateCRC(_dataOut[outDataindex]);
 #endif
   ++outDataindex;
 
-  _dataOut[outDataindex] = readingPacket->address & 0xFF;
-#if kUseCRC
-  CalculateCRC(_dataOut[outDataindex]);
+  writeTempData = readingPacket->address & 0xFF;
+#if USE_CRC
+  CalculateCRC(writeTempData);
 #endif
-  if (_dataOut[outDataindex] == START_FLAG || _dataOut[outDataindex] == END_FLAG || _dataOut[outDataindex] == ESCAPE_FLAG) {
+  if (writeTempData == START_FLAG || writeTempData == END_FLAG || writeTempData == ESCAPE_FLAG) {
     _dataOut[outDataindex] = ESCAPE_FLAG;
     ++outDataindex;
-    _dataOut[outDataindex] = _dataOut[outDataindex] ^ XOR_FLAG ;
+    _dataOut[outDataindex] = writeTempData ^ XOR_FLAG;
   } else {
-    _dataOut[outDataindex] = _dataOut[outDataindex];
+    _dataOut[outDataindex] = writeTempData;
   }
   ++outDataindex;
 
-  _dataOut[outDataindex] = readingPacket->address >> 8;
-#if kUseCRC
-  CalculateCRC(_dataOut[outDataindex]);
+  writeTempData = readingPacket->address >> 8;
+#if USE_CRC
+  CalculateCRC(writeTempData);
 #endif
-  if (_dataOut[outDataindex] == START_FLAG || _dataOut[outDataindex] == END_FLAG || _dataOut[outDataindex] == ESCAPE_FLAG) {
+  if (writeTempData == START_FLAG || writeTempData == END_FLAG || writeTempData == ESCAPE_FLAG) {
     _dataOut[outDataindex] = ESCAPE_FLAG;
     ++outDataindex;
-    _dataOut[outDataindex] = _dataOut[outDataindex] ^ XOR_FLAG ;
+    _dataOut[outDataindex] = writeTempData ^ XOR_FLAG;
   } else {
-    _dataOut[outDataindex] = _dataOut[outDataindex];
+    _dataOut[outDataindex] = writeTempData;
   }
   ++outDataindex;
 
   _dataOut[outDataindex] = 1;
-#if kUseCRC
+#if USE_CRC
   CalculateCRC(_dataOut[outDataindex]);
 #endif
   ++outDataindex;
 
-#if kUseCRC
+#if USE_CRC
   if ((_crc.byte.low == (uint8_t)START_FLAG) || (_crc.byte.low == (uint8_t)END_FLAG)
       || (_crc.byte.low == (uint8_t)ESCAPE_FLAG)) {
     _dataOut[outDataindex] = ESCAPE_FLAG;
     ++outDataindex;
-    _dataOut[outDataindex] = _crc.byte.low ^ XOR_FLAG ;
+    _dataOut[outDataindex] = _crc.byte.low ^ XOR_FLAG;
     ++outDataindex;
   } else {
     _dataOut[outDataindex] = _crc.byte.low;
@@ -529,7 +524,7 @@ bool lumen_read(lumen_packet_t *packet) {
       || (_crc.byte.high == (uint8_t)ESCAPE_FLAG)) {
     _dataOut[outDataindex] = ESCAPE_FLAG;
     ++outDataindex;
-    _dataOut[outDataindex] = _crc.byte.high ^ XOR_FLAG ;
+    _dataOut[outDataindex] = _crc.byte.high ^ XOR_FLAG;
     ++outDataindex;
   } else {
     _dataOut[outDataindex] = _crc.byte.high;

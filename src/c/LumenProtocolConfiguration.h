@@ -4,7 +4,7 @@
 #define MAX_STRING_SIZE 11
 #define QUANTITY_OF_PACKETS 10
 
-#define TICK_TIME_OUT 0xFFFF
+#define TICK_TIME_OUT 0xFFFFFF
 
 #define USE_CRC false
 

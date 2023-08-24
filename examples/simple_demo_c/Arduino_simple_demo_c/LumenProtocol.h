@@ -25,7 +25,7 @@ extern "C"
     int32_t _s32;
     float _float;
     double _double;
-    char *_string;
+    char _string[MAX_STRING_SIZE];
   } lumen_data_t;
 
   typedef enum data_type {

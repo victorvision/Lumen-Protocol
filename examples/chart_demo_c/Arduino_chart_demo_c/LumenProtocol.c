@@ -234,7 +234,7 @@ uint32_t lumen_write_packet(lumen_packet_t *packet) {
       {
         uint8_t length = 0;
         for (; length < MAX_STRING_SIZE; ++length) {
-          if (packet->data._string[length] != '\0') {
+          if (packet->data._string[length] == '\0') {
             break;
           }
         }

@@ -1,5 +1,4 @@
 #include "LumenProtocol.h"
-#include <Arduino.h>
 
 extern void lumen_write_bytes(uint8_t *data, uint32_t length);
 extern uint16_t lumen_get_byte();

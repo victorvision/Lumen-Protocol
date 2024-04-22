@@ -17,6 +17,7 @@
 #define QUANTITY_OF_DATABUFFER_FOR_RETRY 1
 #endif
 
+// DO NOT MODIFY THESE 👇
 #define START_FLAG 0x12
 #define END_FLAG 0x13
 #define ESCAPE_FLAG 0x7D

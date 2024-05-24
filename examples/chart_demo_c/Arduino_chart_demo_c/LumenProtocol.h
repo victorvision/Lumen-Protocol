@@ -2,8 +2,7 @@
 #define LUMEN_PROTOCOL_H_
 
 #if defined(__cplusplus)
-extern "C"
-{
+extern "C" {
 #endif
 
 #include <stdint.h>
@@ -57,7 +56,13 @@ extern "C"
 #if USE_ACK
   void lumen_ack_trigger(uint32_t time_in_ms);
 #endif
-  
+
+#if USE_PROJECT_UPDATE
+  bool lumen_project_update_send_data(uint8_t *data, uint32_t length);
+  void lumen_project_update_tick(uint32_t time_in_ms);
+  void lumen_project_update_finish();
+#endif
+
 #if defined(__cplusplus)
 }
 #endif

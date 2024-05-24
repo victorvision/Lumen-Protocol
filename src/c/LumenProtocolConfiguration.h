@@ -17,6 +17,8 @@
 #define QUANTITY_OF_DATABUFFER_FOR_RETRY 1
 #endif
 
+#define USE_PROJECT_UPDATE false
+
 // DO NOT MODIFY THESE 👇
 #define START_FLAG 0x12
 #define END_FLAG 0x13

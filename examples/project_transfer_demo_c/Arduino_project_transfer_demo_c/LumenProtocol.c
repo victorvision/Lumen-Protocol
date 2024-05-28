@@ -739,13 +739,13 @@ bool lumen_project_update_send_data(uint8_t *data, uint32_t length) {
     static bool sending = false;
     static uint32_t sendingLength = 0;
     static uint32_t sendingLengthOfLastBlock = 0;
-    static bool finishingLastSend = true;
+    static bool finishedLastSend = true;
     static bool res = false;
 
     res = false;
 
-    if (finishingLastSend) {
-      finishingLastSend = false;
+    if (finishedLastSend) {
+      finishedLastSend = false;
       sendingLength = length;
       dataIndex = 0;
     }
@@ -834,7 +834,7 @@ bool lumen_project_update_send_data(uint8_t *data, uint32_t length) {
 
     if ((sendingLength == 0) && (!sending)) {
       res = true;
-      finishingLastSend = true;
+      finishedLastSend = true;
     }
 
     return res;

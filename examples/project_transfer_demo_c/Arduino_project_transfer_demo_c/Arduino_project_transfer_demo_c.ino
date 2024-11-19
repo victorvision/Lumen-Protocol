@@ -200,7 +200,7 @@ void setup() {
   lumen_write_packet(&rebootPacket);
 
   delay(2000);
-  PrepareBlock(Blk01, Blk01Length);
+  PrepareBlock((uint8_t*)Blk01, Blk01Length);
   sendProjectState = kSendBlk01;
 }
 
@@ -219,7 +219,7 @@ void loop() {
     case kSend448Zeros:
       {
         if (SendZeros(448)) {
-          PrepareBlock(Blk02, Blk02Length);
+          PrepareBlock((uint8_t*)Blk02, Blk02Length);
           sendProjectState = kSendBlk02;
         }
       }
@@ -234,7 +234,7 @@ void loop() {
     case kSend131008Zeros:
       {
         if (SendZeros(131008)) {
-          PrepareBlock(Blk03, Blk03Length);
+          PrepareBlock((uint8_t*)Blk03, Blk03Length);
           sendProjectState = kSendBlk03;
         }
       }
@@ -249,7 +249,7 @@ void loop() {
     case kSend131008Zeros2:
       {
         if (SendZeros(131008)) {
-          PrepareBlock(Blk04, Blk04Length);
+          PrepareBlock((uint8_t*)Blk04, Blk04Length);
           sendProjectState = kSendBlk04;
         }
       }
@@ -264,7 +264,7 @@ void loop() {
     case kSend16325Zeros:
       {
         if (SendZeros(16325)) {
-          PrepareBlock(Blk05, Blk05Length);
+          PrepareBlock((uint8_t*)Blk05, Blk05Length);
           sendProjectState = kSendBlk05;
         }
       }
@@ -279,7 +279,7 @@ void loop() {
     case kSend805Zeros:
       {
         if (SendZeros(805)) {
-          PrepareBlock(Blk06, Blk06Length);
+          PrepareBlock((uint8_t*)Blk06, Blk06Length);
           sendProjectState = kSendBlk06;
         }
       }
@@ -294,7 +294,7 @@ void loop() {
     case kSend1698Zeros:
       {
         if (SendZeros(1698)) {
-          PrepareBlock(Blk07, Blk07Length);
+          PrepareBlock((uint8_t*)Blk07, Blk07Length);
           sendProjectState = kSendBlk07;
         }
       }
@@ -302,7 +302,7 @@ void loop() {
     case kSendBlk07:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk07Length)) {
-          PrepareBlock(Blk08, Blk08Length);
+          PrepareBlock((uint8_t*)Blk08, Blk08Length);
           sendProjectState = kSendBlk08;
         }
       }
@@ -310,7 +310,7 @@ void loop() {
     case kSendBlk08:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk08Length)) {
-          PrepareBlock(Blk09, Blk09Length);
+          PrepareBlock((uint8_t*)Blk09, Blk09Length);
           sendProjectState = kSendBlk09;
         }
       }
@@ -318,7 +318,7 @@ void loop() {
     case kSendBlk09:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk09Length)) {
-          PrepareBlock(Blk10, Blk10Length);
+          PrepareBlock((uint8_t*)Blk10, Blk10Length);
           sendProjectState = kSendBlk10;
         }
       }
@@ -326,7 +326,7 @@ void loop() {
     case kSendBlk10:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk10Length)) {
-          PrepareBlock(Blk11, Blk11Length);
+          PrepareBlock((uint8_t*)Blk11, Blk11Length);
           sendProjectState = kSendBlk11;
         }
       }
@@ -341,7 +341,7 @@ void loop() {
     case kSend1370Zeros:
       {
         if (SendZeros(1370)) {
-          PrepareBlock(Blk12, Blk12Length);
+          PrepareBlock((uint8_t*)Blk12, Blk12Length);
           sendProjectState = kSendBlk12;
         }
       }
@@ -349,7 +349,7 @@ void loop() {
     case kSendBlk12:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk12Length)) {
-          PrepareBlock(Blk13, Blk13Length);
+          PrepareBlock((uint8_t*)Blk13, Blk13Length);
           sendProjectState = kSendBlk13;
         }
       }
@@ -357,7 +357,7 @@ void loop() {
     case kSendBlk13:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk13Length)) {
-          PrepareBlock(Blk14, Blk14Length);
+          PrepareBlock((uint8_t*)Blk14, Blk14Length);
           sendProjectState = kSendBlk14;
         }
       }
@@ -365,7 +365,7 @@ void loop() {
     case kSendBlk14:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk14Length)) {
-          PrepareBlock(Blk15, Blk15Length);
+          PrepareBlock((uint8_t*)Blk15, Blk15Length);
           sendProjectState = kSendBlk15;
         }
       }
@@ -380,7 +380,7 @@ void loop() {
     case kSend1917Zeros:
       {
         if (SendZeros(1917)) {
-          PrepareBlock(Blk16, Blk16Length);
+          PrepareBlock((uint8_t*)Blk16, Blk16Length);
           sendProjectState = kSendBlk16;
         }
       }
@@ -395,7 +395,7 @@ void loop() {
     case kSend740Zeros:
       {
         if (SendZeros(740)) {
-          PrepareBlock(Blk17, Blk17Length);
+          PrepareBlock((uint8_t*)Blk17, Blk17Length);
           sendProjectState = kSendBlk17;
         }
       }
@@ -410,7 +410,7 @@ void loop() {
     case kSend1255Zeros:
       {
         if (SendZeros(1255)) {
-          PrepareBlock(Blk18, Blk18Length);
+          PrepareBlock((uint8_t*)Blk18, Blk18Length);
           sendProjectState = kSendBlk18;
         }
       }
@@ -418,7 +418,7 @@ void loop() {
     case kSendBlk18:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk18Length)) {
-          PrepareBlock(Blk19, Blk19Length);
+          PrepareBlock((uint8_t*)Blk19, Blk19Length);
           sendProjectState = kSendBlk19;
         }
       }
@@ -426,7 +426,7 @@ void loop() {
     case kSendBlk19:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk19Length)) {
-          PrepareBlock(Blk20, Blk20Length);
+          PrepareBlock((uint8_t*)Blk20, Blk20Length);
           sendProjectState = kSendBlk20;
         }
       }
@@ -434,7 +434,7 @@ void loop() {
     case kSendBlk20:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk20Length)) {
-          PrepareBlock(Blk21, Blk21Length);
+          PrepareBlock((uint8_t*)Blk21, Blk21Length);
           sendProjectState = kSendBlk21;
         }
       }
@@ -442,7 +442,7 @@ void loop() {
     case kSendBlk21:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk21Length)) {
-          PrepareBlock(Blk22, Blk22Length);
+          PrepareBlock((uint8_t*)Blk22, Blk22Length);
           sendProjectState = kSendBlk22;
         }
       }
@@ -457,7 +457,7 @@ void loop() {
     case kSend1135Zeros:
       {
         if (SendZeros(1135)) {
-          PrepareBlock(Blk23, Blk23Length);
+          PrepareBlock((uint8_t*)Blk23, Blk23Length);
           sendProjectState = kSendBlk23;
         }
       }
@@ -465,7 +465,7 @@ void loop() {
     case kSendBlk23:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk23Length)) {
-          PrepareBlock(Blk24, Blk24Length);
+          PrepareBlock((uint8_t*)Blk24, Blk24Length);
           sendProjectState = kSendBlk24;
         }
       }
@@ -473,7 +473,7 @@ void loop() {
     case kSendBlk24:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk24Length)) {
-          PrepareBlock(Blk25, Blk25Length);
+          PrepareBlock((uint8_t*)Blk25, Blk25Length);
           sendProjectState = kSendBlk25;
         }
       }
@@ -481,7 +481,7 @@ void loop() {
     case kSendBlk25:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk25Length)) {
-          PrepareBlock(Blk26, Blk26Length);
+          PrepareBlock((uint8_t*)Blk26, Blk26Length);
           sendProjectState = kSendBlk26;
         }
       }
@@ -489,7 +489,7 @@ void loop() {
     case kSendBlk26:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk26Length)) {
-          PrepareBlock(Blk27, Blk27Length);
+          PrepareBlock((uint8_t*)Blk27, Blk27Length);
           sendProjectState = kSendBlk27;
         }
       }
@@ -497,7 +497,7 @@ void loop() {
     case kSendBlk27:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk27Length)) {
-          PrepareBlock(Blk28, Blk28Length);
+          PrepareBlock((uint8_t*)Blk28, Blk28Length);
           sendProjectState = kSendBlk28;
         }
       }
@@ -512,7 +512,7 @@ void loop() {
     case kSend1042Zeros:
       {
         if (SendZeros(1042)) {
-          PrepareBlock(Blk29, Blk29Length);
+          PrepareBlock((uint8_t*)Blk29, Blk29Length);
           sendProjectState = kSendBlk29;
         }
       }
@@ -520,7 +520,7 @@ void loop() {
     case kSendBlk29:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk29Length)) {
-          PrepareBlock(Blk30, Blk30Length);
+          PrepareBlock((uint8_t*)Blk30, Blk30Length);
           sendProjectState = kSendBlk30;
         }
       }
@@ -528,7 +528,7 @@ void loop() {
     case kSendBlk30:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk30Length)) {
-          PrepareBlock(Blk31, Blk31Length);
+          PrepareBlock((uint8_t*)Blk31, Blk31Length);
           sendProjectState = kSendBlk31;
         }
       }
@@ -536,7 +536,7 @@ void loop() {
     case kSendBlk31:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk31Length)) {
-          PrepareBlock(Blk32, Blk32Length);
+          PrepareBlock((uint8_t*)Blk32, Blk32Length);
           sendProjectState = kSendBlk32;
         }
       }
@@ -544,7 +544,7 @@ void loop() {
     case kSendBlk32:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk32Length)) {
-          PrepareBlock(Blk33, Blk33Length);
+          PrepareBlock((uint8_t*)Blk33, Blk33Length);
           sendProjectState = kSendBlk33;
         }
       }
@@ -559,7 +559,7 @@ void loop() {
     case kSend1202Zeros:
       {
         if (SendZeros(1202)) {
-          PrepareBlock(Blk34, Blk34Length);
+          PrepareBlock((uint8_t*)Blk34, Blk34Length);
           sendProjectState = kSendBlk34;
         }
       }
@@ -567,7 +567,7 @@ void loop() {
     case kSendBlk34:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk34Length)) {
-          PrepareBlock(Blk35, Blk35Length);
+          PrepareBlock((uint8_t*)Blk35, Blk35Length);
           sendProjectState = kSendBlk35;
         }
       }
@@ -575,7 +575,7 @@ void loop() {
     case kSendBlk35:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk35Length)) {
-          PrepareBlock(Blk36, Blk36Length);
+          PrepareBlock((uint8_t*)Blk36, Blk36Length);
           sendProjectState = kSendBlk36;
         }
       }
@@ -590,7 +590,7 @@ void loop() {
     case kSend1348Zeros:
       {
         if (SendZeros(1348)) {
-          PrepareBlock(Blk37, Blk37Length);
+          PrepareBlock((uint8_t*)Blk37, Blk37Length);
           sendProjectState = kSendBlk37;
         }
       }
@@ -598,7 +598,7 @@ void loop() {
     case kSendBlk37:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk37Length)) {
-          PrepareBlock(Blk38, Blk38Length);
+          PrepareBlock((uint8_t*)Blk38, Blk38Length);
           sendProjectState = kSendBlk38;
         }
       }
@@ -606,7 +606,7 @@ void loop() {
     case kSendBlk38:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk38Length)) {
-          PrepareBlock(Blk39, Blk39Length);
+          PrepareBlock((uint8_t*)Blk39, Blk39Length);
           sendProjectState = kSendBlk39;
         }
       }
@@ -614,7 +614,7 @@ void loop() {
     case kSendBlk39:
       {
         if (lumen_project_update_send_data(BlkToSend, Blk39Length)) {
-          PrepareBlock(Blk40, Blk40Length);
+          PrepareBlock((uint8_t*)Blk40, Blk40Length);
           sendProjectState = kSendBlk40;
         }
       }

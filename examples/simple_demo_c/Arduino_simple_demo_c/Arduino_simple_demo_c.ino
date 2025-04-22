@@ -13,6 +13,7 @@ extern "C" uint16_t lumen_get_byte() {
 
 lumen_packet_t valor_2 = { 20, kS32};
 const int valor_1_address = 10;
+
 lumen_packet_t *currentPacket;
 
 void setup() {
@@ -30,8 +31,10 @@ void loop() {
 
     if (currentPacket != NULL) {
       if (currentPacket->address == valor_1_address){
+
         valor_2.data._s32 = currentPacket->data._s32;
         lumen_write_packet(&valor_2);
+        
       }
     }
   }

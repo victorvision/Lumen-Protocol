@@ -19,7 +19,24 @@
 #define QUANTITY_OF_DATABUFFER_FOR_RETRY 1
 #endif
 
-#define USE_PROJECT_UPDATE false
+/************************************************************ 
+ * 
+ * Attention! USE_PROJECT_UPDATE
+ * 
+ * While the project transfer is in progress,
+ * no functions other than those listed below will work:
+ * - lumen_project_update_send_data
+ * - lumen_project_update_tick
+ * - lumen_project_update_finish
+ * 
+ * 
+ * The other functions will resume working normally
+ * after the execution of the function:
+ * - lumen_project_update_finish
+ * 
+ ************************************************************/
+
+#define USE_PROJECT_UPDATE true 
 
 // DO NOT MODIFY THESE 👇
 #define START_FLAG 0x12

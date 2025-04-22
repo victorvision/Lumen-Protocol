@@ -94,6 +94,8 @@ typedef enum lumen_project_update_response {
   kWaitingCommand,
   kReceivingProjectImageBlock
 } lumen_project_update_response_t;
+
+volatile bool g_is_updating = false;
 #endif
 
 static uint8_t quantityOfPacketsAvailable = 0;
@@ -154,6 +156,12 @@ static uint8_t writeTempData;
 #if USE_ACK
 uint32_t elapsed_time_in_ms = 0;
 void lumen_ack_trigger(uint32_t time_in_ms) {
+
+#if USE_PROJECT_UPDATE
+  if (g_is_updating)
+    return;
+#endif
+
   for (uint8_t dataOutIndex = 1; dataOutIndex < QUANTITY_OF_DATABUFFER_FOR_RETRY; ++dataOutIndex) {
     if (_dataOutRetries[dataOutIndex] > 0) {
       _dataOutElapsedTime[dataOutIndex] += time_in_ms;
@@ -168,6 +176,12 @@ void lumen_ack_trigger(uint32_t time_in_ms) {
 #endif
 
 uint32_t lumen_write(uint16_t address, uint8_t *data, uint32_t length) {
+
+#if USE_PROJECT_UPDATE
+  if (g_is_updating)
+    return 0;
+#endif
+
   static uint32_t outDataIndex;
   outDataIndex = 0;
 
@@ -285,6 +299,12 @@ uint32_t lumen_write(uint16_t address, uint8_t *data, uint32_t length) {
 }
 
 uint32_t lumen_write_packet(lumen_packet_t *packet) {
+
+#if USE_PROJECT_UPDATE
+  if (g_is_updating)
+    return 0;
+#endif
+
   switch (packet->type) {
     case kBool:
       {
@@ -448,6 +468,12 @@ void Pack() {
 }
 
 uint32_t lumen_available() {
+
+#if USE_PROJECT_UPDATE
+  if (g_is_updating)
+    return 0;
+#endif
+
   static bool _started;
   static bool _escaped;
 #if USE_CRC
@@ -510,6 +536,12 @@ uint32_t lumen_available() {
 }
 
 lumen_packet_t *lumen_get_first_packet() {
+
+#if USE_PROJECT_UPDATE
+  if (g_is_updating)
+    return NULL;
+#endif
+
   for (uint8_t i = 0; i < QUANTITY_OF_PACKETS; ++i) {
     if (occupiedSlots[i]) {
       occupiedSlots[i] = false;
@@ -521,6 +553,11 @@ lumen_packet_t *lumen_get_first_packet() {
 }
 
 bool lumen_request(lumen_packet_t *packet) {
+
+#if USE_PROJECT_UPDATE
+  if (g_is_updating)
+    return false;
+#endif
 
   static uint32_t outDataIndex;
   readingPacket = packet;
@@ -603,6 +640,11 @@ bool lumen_request(lumen_packet_t *packet) {
 }
 
 bool lumen_read(lumen_packet_t *packet) {
+
+#if USE_PROJECT_UPDATE
+  if (g_is_updating)
+    return false;
+#endif
 
   reading = true;
 
@@ -730,6 +772,8 @@ static bool lumen_project_update_start() {
 }
 
 bool lumen_project_update_send_data(uint8_t *data, uint32_t length) {
+  g_is_updating = true;
+
   if (lumen_project_update_start()) {
     static uint32_t dataIndex = 0;
     static uint32_t blockBufferLength = 0;
@@ -795,10 +839,12 @@ bool lumen_project_update_send_data(uint8_t *data, uint32_t length) {
                 lumen_write_bytes(blockBuffer, kProjectUpdateBlockLength + kProjectUpdateCrcLength);
                 sendStep = kWaitingForOkMessageOfBlock;
                 sendBlockInterval = kSendBlockInterval + elapsedTimeInMs;
+                break;
               }
               if (lumen_project_update_word_checker(&notOkMessageWordComparator, (char)receivedData)) {
                 sendStep = kSendNewBlockCmd;
                 sendBlockInterval = kSendBlockInterval + elapsedTimeInMs;
+                break;
               }
               receivedData = lumen_get_byte();
             }
@@ -813,10 +859,12 @@ bool lumen_project_update_send_data(uint8_t *data, uint32_t length) {
                 sendBlockInterval = kSendBlockInterval + elapsedTimeInMs;
                 sendingLength -= sendingLengthOfLastBlock;
                 sendingLengthOfLastBlock = 0;
+                break;
               }
               if (lumen_project_update_word_checker(&notOkMessageWordComparator, (char)receivedData)) {
                 sendStep = kSendNewBlockCmd;
                 sendBlockInterval = kSendBlockInterval + elapsedTimeInMs;
+                break;
               }
               receivedData = lumen_get_byte();
             }
@@ -827,7 +875,7 @@ bool lumen_project_update_send_data(uint8_t *data, uint32_t length) {
       }
 
       if (elapsedTimeInMs >= sendBlockInterval) {
-        lumen_write_bytes(blockBuffer, kProjectUpdateBlockLength + kProjectUpdateCrcLength);
+        sendStep = kSendNewBlockCmd;
         sendBlockInterval = elapsedTimeInMs + kSendBlockInterval;
       }
     }
@@ -847,6 +895,7 @@ void lumen_project_update_tick(uint32_t time_in_ms) {
 }
 
 void lumen_project_update_finish() {
+  g_is_updating = false;
   MESSAGE(kCommandFinished);
   isStarted = false;
 }

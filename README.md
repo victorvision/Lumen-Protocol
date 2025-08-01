@@ -1,5 +1,5 @@
 # About the Lumen Protocol library
-The Lumen Protocol library makes it very easy to establish serial communication between any microcontrolller and your Smart + Display!
+The Lumen Protocol library makes it very easy to establish serial communication between any microcontroller and your Smart + Display!
 
 It is written in C, so it is compatible with any MCU architecture from any manufacturer (PIC, ARM, ATMega, STM, etc.)!
 
@@ -73,7 +73,7 @@ void loop() {
 
         if (isFireAlarmOn == true) {
           // Alarm on! Set temperature set point to 20°C
-          engine_temperature_setpointPacket->data.__s32 = 20;
+          engine_temperature_setpointPacket->data._s32 = 20;
         }
 
         // Send the new value (20) to the Display

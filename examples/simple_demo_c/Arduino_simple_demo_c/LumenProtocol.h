@@ -50,11 +50,13 @@ extern "C" {
   } lumen_packet_t;
 
   uint32_t lumen_write(uint16_t address, uint8_t *data, uint32_t length);
+  uint32_t lumen_write_variable_list(uint16_t address, uint16_t index, uint8_t *data, uint32_t length);
   uint32_t lumen_write_packet(lumen_packet_t *packet);
   uint32_t lumen_available();
   bool lumen_read(lumen_packet_t *packet);
   bool lumen_request(lumen_packet_t *packet);
   lumen_packet_t *lumen_get_first_packet();
+
 #if USE_ACK
   void lumen_ack_trigger(uint32_t time_in_ms);
 #endif

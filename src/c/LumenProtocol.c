@@ -298,6 +298,153 @@ uint32_t lumen_write(uint16_t address, uint8_t *data, uint32_t length) {
   return outDataIndex;
 }
 
+
+uint32_t lumen_write_variable_list(uint16_t address, uint16_t index, uint8_t *data, uint32_t length) {
+
+#if USE_PROJECT_UPDATE
+  if (g_is_updating)
+    return 0;
+#endif
+
+  static uint32_t outDataIndex;
+  outDataIndex = 0;
+
+  _dataOut[_dataOutIndex][outDataIndex] = START_FLAG;
+  ++outDataIndex;
+
+  _dataOut[_dataOutIndex][outDataIndex] = WRITE_FLAG;
+#if USE_CRC
+  _crc.value = 0xFFFF;
+  calculate_crc(_dataOut[_dataOutIndex][outDataIndex]);
+#endif
+  ++outDataIndex;
+
+  writeTempData = address & 0xFF;
+#if USE_CRC
+  calculate_crc(writeTempData);
+#endif
+  if (writeTempData == START_FLAG || writeTempData == END_FLAG || writeTempData == ESCAPE_FLAG) {
+    _dataOut[_dataOutIndex][outDataIndex] = ESCAPE_FLAG;
+    ++outDataIndex;
+    _dataOut[_dataOutIndex][outDataIndex] = writeTempData ^ XOR_FLAG;
+  } else {
+    _dataOut[_dataOutIndex][outDataIndex] = writeTempData;
+  }
+  ++outDataIndex;
+
+  writeTempData = address >> 8;
+#if USE_CRC
+  calculate_crc(writeTempData);
+#endif
+  if (writeTempData == START_FLAG || writeTempData == END_FLAG || writeTempData == ESCAPE_FLAG) {
+    _dataOut[_dataOutIndex][outDataIndex] = ESCAPE_FLAG;
+    ++outDataIndex;
+    _dataOut[_dataOutIndex][outDataIndex] = writeTempData ^ XOR_FLAG;
+  } else {
+    _dataOut[_dataOutIndex][outDataIndex] = writeTempData;
+  }
+  ++outDataIndex;
+
+#if USE_CRC
+  for (uint16_t i = 0; i < length; i++) {
+    calculate_crc(data[i]);
+  }
+#endif
+
+  u16_union_t _index;
+  _index.value = index;
+
+  if (_index.byte.low == START_FLAG || _index.byte.low == END_FLAG || _index.byte.low == ESCAPE_FLAG) {
+    _dataOut[_dataOutIndex][outDataIndex] = ESCAPE_FLAG;
+    ++outDataIndex;
+    _dataOut[_dataOutIndex][outDataIndex] = _index.byte.low ^ XOR_FLAG;
+    ++outDataIndex;
+  } else {
+    _dataOut[_dataOutIndex][outDataIndex] = _index.byte.low;
+    ++outDataIndex;
+  }
+
+  if (_index.byte.high == START_FLAG || _index.byte.high == END_FLAG || _index.byte.high == ESCAPE_FLAG) {
+    _dataOut[_dataOutIndex][outDataIndex] = ESCAPE_FLAG;
+    ++outDataIndex;
+    _dataOut[_dataOutIndex][outDataIndex] = _index.byte.high ^ XOR_FLAG;
+    ++outDataIndex;
+  } else {
+    _dataOut[_dataOutIndex][outDataIndex] = _index.byte.high;
+    ++outDataIndex;
+  }
+
+  for (uint16_t i = 0; i < length; i++) {
+    if (data[i] == START_FLAG || data[i] == END_FLAG || data[i] == ESCAPE_FLAG) {
+      _dataOut[_dataOutIndex][outDataIndex] = ESCAPE_FLAG;
+      ++outDataIndex;
+      _dataOut[_dataOutIndex][outDataIndex] = data[i] ^ XOR_FLAG;
+      ++outDataIndex;
+    } else {
+      _dataOut[_dataOutIndex][outDataIndex] = data[i];
+      ++outDataIndex;
+    }
+  }
+
+#if USE_ACK
+  _dataOut[_dataOutIndex][outDataIndex] = _dataOutIndex;
+#if USE_CRC
+  calculate_crc(_dataOut[_dataOutIndex][outDataIndex]);
+#endif
+  ++outDataIndex;
+  _dataOut[_dataOutIndex][outDataIndex] = 0;
+#if USE_CRC
+  calculate_crc(_dataOut[_dataOutIndex][outDataIndex]);
+#endif
+  ++outDataIndex;
+#endif
+
+#if USE_CRC
+  if ((_crc.byte.high == (uint8_t)START_FLAG) || (_crc.byte.high == (uint8_t)END_FLAG)
+      || (_crc.byte.high == (uint8_t)ESCAPE_FLAG)) {
+    _dataOut[_dataOutIndex][outDataIndex] = ESCAPE_FLAG;
+    ++outDataIndex;
+    _dataOut[_dataOutIndex][outDataIndex] = _crc.byte.high ^ XOR_FLAG;
+    ++outDataIndex;
+  } else {
+    _dataOut[_dataOutIndex][outDataIndex] = _crc.byte.high;
+    ++outDataIndex;
+  }
+
+  if ((_crc.byte.low == (uint8_t)START_FLAG) || (_crc.byte.low == (uint8_t)END_FLAG)
+      || (_crc.byte.low == (uint8_t)ESCAPE_FLAG)) {
+    _dataOut[_dataOutIndex][outDataIndex] = ESCAPE_FLAG;
+    ++outDataIndex;
+    _dataOut[_dataOutIndex][outDataIndex] = _crc.byte.low ^ XOR_FLAG;
+    ++outDataIndex;
+  } else {
+    _dataOut[_dataOutIndex][outDataIndex] = _crc.byte.low;
+    ++outDataIndex;
+  }
+#endif
+
+  _dataOut[_dataOutIndex][outDataIndex] = END_FLAG;
+  ++outDataIndex;
+
+  lumen_write_bytes(_dataOut[_dataOutIndex], outDataIndex);
+
+#if USE_ACK
+  _dataOutLengths[_dataOutIndex] = outDataIndex;
+  _dataOutElapsedTime[_dataOutIndex] = 0;
+  _dataOutRetries[_dataOutIndex] = QUANTITY_OF_RETRIES;
+  for (_dataOutIndex = 1; _dataOutIndex < QUANTITY_OF_DATABUFFER_FOR_RETRY; ++_dataOutIndex) {
+    if (_dataOutRetries[_dataOutIndex] == 0) {
+      break;
+    }
+  }
+  if (_dataOutIndex >= QUANTITY_OF_DATABUFFER_FOR_RETRY) {
+    _dataOutIndex = QUANTITY_OF_DATABUFFER_FOR_RETRY - 1;
+  }
+#endif
+
+  return outDataIndex;
+}
+
 uint32_t lumen_write_packet(lumen_packet_t *packet) {
 
 #if USE_PROJECT_UPDATE

@@ -46,6 +46,20 @@ void loop() {
 // ...
 ```
 
+4. Function to edit basic text list and integer list:
+
+```cpp
+// ...
+
+uint32_t lumen_write_variable_list(uint16_t address, uint16_t index, uint8_t *data, uint32_t length);
+
+// Example
+// Change the text at index 7 of a basic text list configured at address 125 to "New Text"
+
+lumen_write_variable_list(125, 7, "New Text", 9);
+
+// ...
+```
 
 
 

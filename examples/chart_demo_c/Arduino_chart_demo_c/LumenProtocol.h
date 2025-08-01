@@ -1,7 +1,7 @@
 #ifndef LUMEN_PROTOCOL_H_
 #define LUMEN_PROTOCOL_H_
 
-// Version 1.1
+// Version 1.2
 
 #if defined(__cplusplus)
 extern "C" {

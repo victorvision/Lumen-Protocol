@@ -40,7 +40,8 @@ uint32_t NextInputToListIndex = 0;
 
 const uint32_t kInputSize = 38;
 uint8_t inputToListMap[kInputSize];
-uint8_t ListQuantityMap[kInputSize];
+uint8_t listQuantityMap[kInputSize];
+uint8_t listToBasicTextListMap[kInputSize];
 
 const uint32_t kListUnusedValue = 255;
 
@@ -51,8 +52,9 @@ void setup() {
   Serial.begin(115200);
   Serial.print("\r\n Begin");
 
-  for (int i = 0; i < kInputSize; i++) inputToListMap[i] = kListUnusedValue;
-  for (int i = 0; i < kInputSize; i++) ListQuantityMap[i] = 0;
+  for (int i = 0; i < kInputSize; ++i) inputToListMap[i] = kListUnusedValue;
+  for (int i = 0; i < kInputSize; ++i) listQuantityMap[i] = 0;
+  for (int i = 0; i < kInputSize; ++i) listToBasicTextListMap[i] = kListUnusedValue;
 
   delay(2000);
 }
@@ -91,10 +93,10 @@ void AddToList(uint32_t quantity) {
     inputToListMap[selectedInputIndex] = NextInputToListIndex;
     ++NextInputToListIndex;
   }
-  ListQuantityMap[selectedInputIndex] += quantity;
+  listQuantityMap[selectedInputIndex] += quantity;
 
   if (lumen_read(&input_item_namePacket)) {
-    NewListText = String(ListQuantityMap[selectedInputIndex]);
+    NewListText = String(listQuantityMap[selectedInputIndex]);
     NewListText += "x ";
     NewListText += input_item_namePacket.data._string;
 
@@ -103,10 +105,17 @@ void AddToList(uint32_t quantity) {
     selectedListIndex = inputToListMap[selectedInputIndex];
     list_indexPacket.data._s32 = inputToListMap[selectedInputIndex];
     lumen_write_packet(&list_indexPacket);
+
+    listToBasicTextListMap[selectedListIndex] = selectedListIndex;
   }
 }
 
 void RemoveFromList() {
-  lumen_write_variable_list(listAddress, selectedListIndex, "\0", 1);
-  ++selectedListIndex;
+  lumen_write_variable_list(listAddress, listToBasicTextListMap[selectedListIndex], "\0", 1);
+  for (uint8_t i = selectedListIndex; i < kInputSize; ++i) {
+    listToBasicTextListMap[i] = listToBasicTextListMap[i + 1];
+    if (listToBasicTextListMap[i] == kListUnusedValue) {
+      break;
+    }
+  }
 }

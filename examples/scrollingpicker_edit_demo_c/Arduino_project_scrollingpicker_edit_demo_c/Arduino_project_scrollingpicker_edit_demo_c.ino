@@ -31,7 +31,7 @@ lumen_packet_t list_indexPacket = { list_indexAddress, kS32 };
 lumen_packet_t removePacket = { removeAddress, kBool };
 lumen_packet_t input_item_namePacket = { input_item_nameAddress, kString };
 
-lumen_packet_t *currentPackage;
+lumen_packet_t *currentPacket;
 
 uint32_t selectedInputIndex = 0;
 uint32_t selectedListIndex = 0;
@@ -62,10 +62,10 @@ void setup() {
 void loop() {
 
   while (lumen_available() > 0) {
-    currentPackage = lumen_get_first_packet();
+    currentPacket = lumen_get_first_packet();
 
-    if (currentPackage != NULL) {
-      switch (currentPackage->address) {
+    if (currentPacket != NULL) {
+      switch (currentPacket->address) {
         case add_1Address:
           AddToList(1);
           break;
@@ -73,10 +73,10 @@ void loop() {
           AddToList(5);
           break;
         case input_indexAddress:
-          selectedInputIndex = currentPackage->data._s32;
+          selectedInputIndex = currentPacket->data._s32;
           break;
         case list_indexAddress:
-          selectedListIndex = currentPackage->data._s32;
+          selectedListIndex = currentPacket->data._s32;
           break;
         case removeAddress:
           RemoveFromList();

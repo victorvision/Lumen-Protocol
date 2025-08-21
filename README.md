@@ -146,12 +146,70 @@ You can also try our official demo projects at:
 - https://www.proculustech.com/unicview-studio-demo-projects/
 - https://victorvision.com.br/suporte/unicview-studio-projetos-demo/
 
-## Send text to the Display (write string)
+## Sending values to the Display
+
+
+## Receiving values from the Display from user input {#receiving-input}
+``` cpp
+// Variable packet declaration:
+const uint16_t temperature_setpointAddress = 127;
+lumen_packet_t temperature_setpointPacket = { temperature_setpointAddress, kFloat };
+
+
+// Somewhere in your main loop:
+while (lumen_available() > 0) { // While there are new unread packets
+  currentPacket = lumen_get_first_packet(); // Gets the oldest unread packet
+  if (currentPacket != NULL) { // Checks if the packet is valid
+
+    if (currentPacket->address == temperature_setpointAddress) { // Checks the packet address, and only process it if it is from the correct variable
+      float temperatureSetPoint = currentPacket->data._float; // Gets the packet value and stores it for further usage
+
+      // Do something with 'temperatureSetPoint'
+    }
+  }
+}
+```
+
+Notice the settings from UnicView Studio:
+![](documentation/protocol-settings-2.png)
+
+## Detecting button events
+There is no concept of "button events" per se in the communication structure. To detect button events, you need to make the button modify some variable that represents the event.
+
+In other words, you don't receive nor react to touch events on the Display, you receive changes in the values of the variables, and you react to those value changes.
+
+This is exactly the same idea from the ["Receiving values"](#receiving-input) example.
+
+Example:
+
+``` cpp
+// Variable packet declaration:
+const uint16_t start_evacuation_button_pressedAddress = 128;
+lumen_packet_t start_evacuation_button_pressedPacket = { start_evacuation_button_pressedAddress, kBool };
+
+
+// Somewhere in your main loop:
+while (lumen_available() > 0) { // While there are new unread packets
+  currentPacket = lumen_get_first_packet(); // Gets the oldest unread packet
+  if (currentPacket != NULL) { // Checks if the packet is valid
+
+    if (currentPacket->address == start_evacuation_button_pressedAddress) {
+      // We don't nee to get the value, since when this button changes the value to any value, it signals
+      // we should start the evacuation.
+      // So, here goes the evacuation logic 👇.
+    }
+  }
+}
+```
+
+Notice the settings from UnicView Studio:
+![](documentation/protocol-settings-1.png)
+
+## Sending text to the Display (write string)
 ``` cpp
 // Variable packet declaration:
 const uint16_t statusTextAddress = 123;
 lumen_packet_t statusTextPacket = { statusTextAddress, kString };
-
 
 
 // Somewhere in your main loop:

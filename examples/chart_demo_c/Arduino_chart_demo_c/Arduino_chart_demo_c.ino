@@ -27,7 +27,7 @@ lumen_packet_t autoIndividualManipulationPacket = { autoIndividualManipulationAd
 lumen_packet_t maxSelectedPointPacket = { maxSelectedPointAddress, kS32 };
 lumen_packet_t selectedDelayPacket = { delayAddress, kS32 };
 
-lumen_packet_t *currentPackage;
+lumen_packet_t *currentPacket;
 
 bool isAutoAppendValue = false;
 bool isAutoIndividualManipulation = false;
@@ -76,26 +76,26 @@ void setup() {
 void loop() {
 
   while (lumen_available() > 0) {
-    currentPackage = lumen_get_first_packet();
+    currentPacket = lumen_get_first_packet();
 
-    if (currentPackage != NULL) {
+    if (currentPacket != NULL) {
       Serial.print("\r\n\r\n Address: ");
-      Serial.print(currentPackage->address);
+      Serial.print(currentPacket->address);
       Serial.print("\r\n Data: ");
-      Serial.print(currentPackage->data._u8);
+      Serial.print(currentPacket->data._u8);
 
-      switch (currentPackage->address) {
+      switch (currentPacket->address) {
         case autoAppendValueAddress:
-          isAutoAppendValue = currentPackage->data._bool;
+          isAutoAppendValue = currentPacket->data._bool;
           break;
         case autoIndividualManipulationAddress:
-          isAutoIndividualManipulation = currentPackage->data._bool;
+          isAutoIndividualManipulation = currentPacket->data._bool;
           break;
         case maxSelectedPointAddress:
-          maxSelectedPoint = currentPackage->data._s32;
+          maxSelectedPoint = currentPacket->data._s32;
           break;
         case delayAddress:
-          selectedDelay = currentPackage->data._s32;
+          selectedDelay = currentPacket->data._s32;
           break;
       }
     }

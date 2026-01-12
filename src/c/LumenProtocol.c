@@ -460,14 +460,15 @@ uint32_t lumen_write_packet(lumen_packet_t *packet) {
       break;
     case kString:
       {
-        uint8_t length = 0;
-        for (; length < MAX_STRING_SIZE; ++length) {
-          if (packet->data._string[length] == '\0') {
+        uint8_t index = 0;
+        for (; index < MAX_STRING_SIZE; ++index) {
+          if (packet->data._string[index] == '\0') {
             break;
           }
         }
 
-        lumen_write(packet->address, (uint8_t *)packet->data._string, length + 1);
+        uint8_t length = index + 1;
+        lumen_write(packet->address, (uint8_t *)packet->data._string, length);
       }
       break;
     case kChar:

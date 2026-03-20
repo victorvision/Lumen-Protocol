@@ -816,9 +816,10 @@ bool lumen_read(lumen_packet_t *packet) {
 
 #if USE_PROJECT_UPDATE
 
-#define MESSAGE(x) lumen_write_bytes((uint8_t *)x, (uint32_t)sizeof(x) - 1)
+#define MESSAGE(x) lumen_write_bytes((uint8_t *)x, (uint32_t)strlen(x))
 
 #define kUpdateProject "UPDATE PROJECT A"
+#define kUpdateFirmware "UPDATE FIRMWARE A"
 #define kCommandFinished "FINISHED A"
 #define kCommandNewDataBlock "NEW BLOCK A"
 #define kOKMessage "RECEIVED OK A"
@@ -895,7 +896,7 @@ static u16_union_t lumen_project_update_calculate_crc(uint8_t *data, uint32_t le
   return crc;
 }
 
-static bool lumen_project_update_start() {
+static bool lumen_update_start(const char *msg) {
 
   if (isStarted) {
     return true;
@@ -912,17 +913,17 @@ static bool lumen_project_update_start() {
   }
 
   if (elapsedTimeInMs >= startInterval) {
-    MESSAGE(kUpdateProject);
+    MESSAGE(msg);
     startInterval = elapsedTimeInMs + kStartInterval;
   }
 
   return false;
 }
 
-bool lumen_project_update_send_data(uint8_t *data, uint32_t length) {
+bool lumen_update_send_data(uint8_t *data, uint32_t length, const char *msgUpdate) {
   g_is_updating = true;
 
-  if (lumen_project_update_start()) {
+  if (lumen_update_start(msgUpdate)) {
     static uint32_t dataIndex = 0;
     static uint32_t blockBufferLength = 0;
     static uint8_t blockBuffer[kProjectUpdateBlockLength + kProjectUpdateCrcLength];
@@ -1036,6 +1037,14 @@ bool lumen_project_update_send_data(uint8_t *data, uint32_t length) {
     return res;
   }
   return false;
+}
+
+bool lumen_firmware_update_send_data(uint8_t *data, uint32_t length) {
+  return lumen_update_send_data(data, length, kUpdateFirmware);
+}
+
+bool lumen_project_update_send_data(uint8_t *data, uint32_t length) {
+  return lumen_update_send_data(data, length, kUpdateProject);
 }
 
 void lumen_project_update_tick(uint32_t time_in_ms) {

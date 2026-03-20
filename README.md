@@ -259,3 +259,6 @@ This repository contains a demonstration project showcasing how to transfer a co
 
 ## Basic Display Project update by UART
 See this example project for a basic implementation of Project update by UART: [project_transfer_demo_c](./examples/project_transfer_demo_c).
+
+## Basic Display Firmware update by UART
+See this example project for a basic implementation of Firmware update by UART: [firmware_transfer_demo_c](./examples/firmware_transfer_demo_c).

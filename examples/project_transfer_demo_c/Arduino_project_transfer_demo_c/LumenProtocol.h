@@ -1,7 +1,7 @@
 #ifndef LUMEN_PROTOCOL_H_
 #define LUMEN_PROTOCOL_H_
 
-// Version 1.2
+// Version 1.4
 
 #if defined(__cplusplus)
 extern "C" {
@@ -10,6 +10,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "LumenProtocolConfiguration.h"
 
@@ -63,6 +64,7 @@ extern "C" {
 
 #if USE_PROJECT_UPDATE
   bool lumen_project_update_send_data(uint8_t *data, uint32_t length);
+  bool lumen_firmware_update_send_data(uint8_t *data, uint32_t length);  
   void lumen_project_update_tick(uint32_t time_in_ms);
   void lumen_project_update_finish();
 #endif

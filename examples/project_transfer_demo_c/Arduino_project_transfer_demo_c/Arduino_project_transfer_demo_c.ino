@@ -160,7 +160,6 @@ uint8_t BlkToSend[1660];
 uint8_t Zero = 0x00;
 
 SendProjectState sendProjectState = kFinished;
-SendProjectState lastSendProjectState = kFinished;
 
 void PrepareBlock(uint8_t* blk, uint32_t length) {
 

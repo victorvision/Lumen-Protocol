@@ -7,6 +7,9 @@ It is written in C, so it is compatible with any MCU architecture from any manuf
 
 To make things even easier, you can export all the variable definitions directly from your UnicView Studio project!
 
+# Change notes
+See [this file](documentation/change-notes.md).
+
 # Getting Started
 
 ## C library setup

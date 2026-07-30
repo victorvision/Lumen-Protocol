@@ -118,6 +118,8 @@ static uint32_t _dataOutElapsedTime[QUANTITY_OF_DATABUFFER_FOR_RETRY];
 static uint8_t _dataOutRetries[QUANTITY_OF_DATABUFFER_FOR_RETRY] = { 0, 0, 0, 0, 0 };
 static uint8_t _dataOutLengths[QUANTITY_OF_DATABUFFER_FOR_RETRY] = { 0, 0, 0, 0, 0 };
 static uint8_t _dataOutIndex = 1;
+static uint8_t _ackDataOut[] = { START_FLAG, ACK_FLAG, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t _ackDataOutLength = 0;
 #else
 static uint8_t _dataOutIndex = 0;
 #endif
@@ -240,16 +242,24 @@ uint32_t lumen_write(uint16_t address, uint8_t *data, uint32_t length) {
   }
 
 #if USE_ACK
-  _dataOut[_dataOutIndex][outDataIndex] = _dataOutIndex;
-#if USE_CRC
-  calculate_crc(_dataOut[_dataOutIndex][outDataIndex]);
-#endif
-  ++outDataIndex;
+
+  if (_dataOutIndex == START_FLAG || _dataOutIndex == END_FLAG || _dataOutIndex == ESCAPE_FLAG) {
+    _dataOut[_dataOutIndex][outDataIndex] = ESCAPE_FLAG;
+    ++outDataIndex;
+    _dataOut[_dataOutIndex][outDataIndex] = _dataOutIndex ^ XOR_FLAG;
+    ++outDataIndex;
+  } else {
+    _dataOut[_dataOutIndex][outDataIndex] = _dataOutIndex;
+    ++outDataIndex;
+  }
+
   _dataOut[_dataOutIndex][outDataIndex] = 0;
-#if USE_CRC
-  calculate_crc(_dataOut[_dataOutIndex][outDataIndex]);
-#endif
   ++outDataIndex;
+
+#if USE_CRC
+  calculate_crc(_dataOutIndex);
+  calculate_crc(0);
+#endif
 #endif
 
 #if USE_CRC
@@ -563,6 +573,62 @@ void ParsePayload() {
   }
 }
 
+#if USE_ACK
+void SendAck() {
+  _ackDataOutLength = 2;
+  if (_dataIn[_dataIndex - 2] == START_FLAG || _dataIn[_dataIndex - 2] == END_FLAG || _dataIn[_dataIndex - 2] == ESCAPE_FLAG) {
+    _ackDataOut[_ackDataOutLength] = ESCAPE_FLAG;
+    ++_ackDataOutLength;
+    _ackDataOut[_ackDataOutLength] = _dataIn[_dataIndex - 2] ^ XOR_FLAG;
+    ++_ackDataOutLength;
+  } else {
+    _ackDataOut[_ackDataOutLength] = _dataIn[_dataIndex - 2];
+    ++_ackDataOutLength;
+  }
+
+  if (_dataIn[_dataIndex - 1] == START_FLAG || _dataIn[_dataIndex - 1] == END_FLAG || _dataIn[_dataIndex - 1] == ESCAPE_FLAG) {
+    _ackDataOut[_ackDataOutLength] = ESCAPE_FLAG;
+    ++_ackDataOutLength;
+    _ackDataOut[_ackDataOutLength] = _dataIn[_dataIndex - 1] ^ XOR_FLAG;
+    ++_ackDataOutLength;
+  } else {
+    _ackDataOut[_ackDataOutLength] = _dataIn[_dataIndex - 1];
+    ++_ackDataOutLength;
+  }
+
+
+#if USE_CRC
+
+  _crc.value = 0xFFFF;
+  for (uint32_t i = 1; i < _ackDataOutLength; ++i) {
+    calculate_crc(_ackDataOut[i]);
+  }
+
+  if ((_crc.byte.high == (uint8_t)START_FLAG) || (_crc.byte.high == (uint8_t)END_FLAG)
+      || (_crc.byte.high == (uint8_t)ESCAPE_FLAG)) {
+    _ackDataOut[_ackDataOutLength] = ESCAPE_FLAG;
+    ++_ackDataOutLength;
+    _ackDataOut[_ackDataOutLength] = _crc.byte.high ^ XOR_FLAG;
+    ++_ackDataOutLength;
+  } else {
+    _ackDataOut[_ackDataOutLength] = _crc.byte.high;
+    ++_ackDataOutLength;
+  }
+
+  if ((_crc.byte.low == (uint8_t)START_FLAG) || (_crc.byte.low == (uint8_t)END_FLAG)
+      || (_crc.byte.low == (uint8_t)ESCAPE_FLAG)) {
+    _ackDataOut[_ackDataOutLength] = ESCAPE_FLAG;
+    ++_ackDataOutLength;
+    _ackDataOut[_ackDataOutLength] = _crc.byte.low ^ XOR_FLAG;
+    ++_ackDataOutLength;
+  } else {
+    _ackDataOut[_ackDataOutLength] = _crc.byte.low;
+    ++_ackDataOutLength;
+  }
+#endif
+}
+#endif
+
 void Pack() {
   if (_command == READ_FLAG) {
     if (reading == true) {
@@ -582,7 +648,9 @@ void Pack() {
       if (occupiedSlots[packetIndex] == true) {
         if (packets[packetIndex].address == _address.value) {
           uint8_t dataSize = _dataIndex - kData;
-
+#if USE_ACK
+          dataSize = dataSize - 2;
+#endif
           for (uint8_t i = 0; i < dataSize; ++i) {
             packets[packetIndex].data._string[i] = _dataIn[i + kData];
           }
@@ -597,7 +665,9 @@ void Pack() {
         packets[packetIndex].address = _address.value;
 
         uint8_t dataSize = _dataIndex - kData;
-
+#if USE_ACK
+        dataSize = dataSize - 2;
+#endif
         for (uint8_t i = 0; i < dataSize; ++i) {
           packets[packetIndex].data._string[i] = _dataIn[i + kData];
         }
@@ -607,6 +677,16 @@ void Pack() {
         break;
       }
     }
+
+#if USE_ACK
+    SendAck();
+
+    _ackDataOut[_ackDataOutLength] = END_FLAG;
+    ++_ackDataOutLength;
+
+    lumen_write_bytes(_ackDataOut, _ackDataOutLength);
+#endif
+
   }
 #if USE_ACK
   else if (_command == ACK_FLAG) {
@@ -658,6 +738,7 @@ uint32_t lumen_available() {
       }
 
       if ((_dataIn[_dataIndex - 2] == (_crc.byte.high)) && (_dataIn[_dataIndex - 1] == (_crc.byte.low))) {
+        _dataIndex = _dataIndexOffseted;
         Pack();
       }
       _crcStarted = false;

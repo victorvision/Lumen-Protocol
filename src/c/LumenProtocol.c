@@ -713,7 +713,7 @@ uint32_t lumen_available() {
 
   receivedData = lumen_get_byte();
 
-  while (receivedData != 0xFFFF) {
+  while (receivedData != DATA_NULL) {
     if (receivedData == START_FLAG) {
 
 #if USE_CRC
@@ -902,6 +902,7 @@ bool lumen_read(lumen_packet_t *packet) {
 #define kUpdateProject "UPDATE PROJECT A"
 #define kUpdateFirmware "UPDATE FIRMWARE A"
 #define kCommandFinished "FINISHED A"
+#define kCommandFinishedAndReset "FINISHED RESET A"
 #define kCommandNewDataBlock "NEW BLOCK A"
 #define kOKMessage "RECEIVED OK A"
 #define kNotOKMessage "RECEIVED NOT OK A"
@@ -944,7 +945,6 @@ static bool lumen_project_update_word_checker(lumen_project_update_word_packet_t
     if (word_packet->word[word_packet->index] == character) {
       ++word_packet->index;
     }
-    return false;
   }
   return false;
 }
@@ -977,7 +977,12 @@ static u16_union_t lumen_project_update_calculate_crc(uint8_t *data, uint32_t le
   return crc;
 }
 
+static uint32_t restart_interval = 0;
+static bool sendFinishMessage = true;
+
 static bool lumen_update_start(const char *msg) {
+
+  static bool lumenUpdateResetPending = true;
 
   if (isStarted) {
     return true;
@@ -986,8 +991,22 @@ static bool lumen_update_start(const char *msg) {
   static uint32_t startInterval = kStartInterval;
   receivedData = lumen_get_byte();
 
-  while (receivedData != 0xFFFF) {
+  if (lumenUpdateResetPending) {
+    if (elapsedTimeInMs >= restart_interval) {
+      while (receivedData != DATA_NULL) {
+        receivedData = lumen_get_byte();
+      }
+      sendFinishMessage = true;
+      lumenUpdateResetPending = false;
+      startInterval = elapsedTimeInMs + kStartInterval;
+    } else {
+      return false;
+    }
+  }
+
+  while (receivedData != DATA_NULL) {
     if (lumen_project_update_word_checker(&okMessageWordComparator, (char)receivedData)) {
+      lumenUpdateResetPending = true;
       isStarted = true;
     }
     receivedData = lumen_get_byte();
@@ -1000,6 +1019,8 @@ static bool lumen_update_start(const char *msg) {
 
   return false;
 }
+
+bool g_finished_last_file_send = false;
 
 bool lumen_update_send_data(uint8_t *data, uint32_t length, const char *msgUpdate) {
   g_is_updating = true;
@@ -1017,6 +1038,19 @@ bool lumen_update_send_data(uint8_t *data, uint32_t length, const char *msgUpdat
     static bool res = false;
 
     res = false;
+
+    if (g_finished_last_file_send == true)
+    {
+      g_finished_last_file_send = false;
+      dataIndex = 0;
+      blockBufferLength = 0;
+      sendBlockInterval = 0;
+      sending = false;
+      sendingLength = 0;
+      sendingLengthOfLastBlock = 0;
+      finishedLastSend = true;
+      res = false;
+    }
 
     if (finishedLastSend) {
       finishedLastSend = false;
@@ -1064,7 +1098,7 @@ bool lumen_update_send_data(uint8_t *data, uint32_t length, const char *msgUpdat
         case kWaitingForOkMessageOfNewBlockCmd:
           {
             receivedData = lumen_get_byte();
-            while (receivedData != 0xFFFF) {
+            while (receivedData != DATA_NULL) {
               if (lumen_project_update_word_checker(&okMessageWordComparator, (char)receivedData)) {
                 lumen_write_bytes(blockBuffer, kProjectUpdateBlockLength + kProjectUpdateCrcLength);
                 sendStep = kWaitingForOkMessageOfBlock;
@@ -1083,7 +1117,7 @@ bool lumen_update_send_data(uint8_t *data, uint32_t length, const char *msgUpdat
         case kWaitingForOkMessageOfBlock:
           {
             receivedData = lumen_get_byte();
-            while (receivedData != 0xFFFF) {
+            while (receivedData != DATA_NULL) {
               if (lumen_project_update_word_checker(&okMessageWordComparator, (char)receivedData)) {
                 sending = false;
                 sendBlockInterval = kSendBlockInterval + elapsedTimeInMs;
@@ -1120,22 +1154,84 @@ bool lumen_update_send_data(uint8_t *data, uint32_t length, const char *msgUpdat
   return false;
 }
 
+uint32_t sended_padding_bytes = 0;
+#define padding_array_size 4
+uint8_t padding_array[padding_array_size] = { 0, 0, 0, 0 };
+bool update_send_res = false;
+
 bool lumen_firmware_update_send_data(uint8_t *data, uint32_t length) {
-  return lumen_update_send_data(data, length, kUpdateFirmware);
+  update_send_res = lumen_update_send_data(data, length, kUpdateFirmware);
+  if (update_send_res == true) {
+    sended_padding_bytes += length;
+  }
+  return update_send_res;
 }
 
 bool lumen_project_update_send_data(uint8_t *data, uint32_t length) {
-  return lumen_update_send_data(data, length, kUpdateProject);
+  update_send_res = lumen_update_send_data(data, length, kUpdateProject);
+  if (update_send_res == true) {
+    sended_padding_bytes += length;
+  }
+  return update_send_res;
 }
 
-void lumen_project_update_tick(uint32_t time_in_ms) {
+void lumen_project_and_firmware_update_tick(uint32_t time_in_ms) {
   elapsedTimeInMs += time_in_ms;
 }
 
-void lumen_project_update_finish() {
-  g_is_updating = false;
-  MESSAGE(kCommandFinished);
-  isStarted = false;
+static bool add_padding() {
+  uint32_t send_padding_size = sended_padding_bytes % kProjectUpdateBlockLength;
+  while (send_padding_size) {
+    if (send_padding_size > padding_array_size) {
+      update_send_res = lumen_update_send_data(padding_array, padding_array_size, " ");
+      if (update_send_res == true) {
+        send_padding_size -= padding_array_size;
+      }
+    } else {
+      update_send_res = lumen_update_send_data(padding_array, padding_array_size, " ");
+      if (update_send_res == true) {
+        send_padding_size = 0;
+        sended_padding_bytes = 0;
+      }
+    }
+  }
+  return update_send_res;
+}
+
+bool lumen_finish(const char *msg) {
+  static uint32_t finishInterval = 0;
+
+  if (elapsedTimeInMs >= finishInterval) {
+
+    add_padding();
+
+    MESSAGE(msg);
+
+    g_is_updating = false;
+    isStarted = false;
+    g_finished_last_file_send = true;
+    restart_interval = elapsedTimeInMs + 200;
+    finishInterval = elapsedTimeInMs + 100;
+
+  } else {
+    receivedData = lumen_get_byte();
+    while (receivedData != DATA_NULL) {
+      if (lumen_project_update_word_checker(&okMessageWordComparator, (char)receivedData)) {
+        return true;
+      }
+      receivedData = lumen_get_byte();
+    }
+   }
+  return false;
+}
+
+bool lumen_project_and_firmware_update_finish() {
+  return lumen_finish(kCommandFinished);
+}
+
+bool lumen_project_and_firmware_update_finish_and_reset() {
+  return lumen_finish(kCommandFinishedAndReset);
+}
 }
 
 #endif

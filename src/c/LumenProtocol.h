@@ -1,7 +1,7 @@
 #ifndef LUMEN_PROTOCOL_H_
 #define LUMEN_PROTOCOL_H_
 
-// Version 1.4
+// Version 1.5
 
 #if defined(__cplusplus)
 extern "C" {
@@ -64,9 +64,10 @@ extern "C" {
 
 #if USE_PROJECT_UPDATE
   bool lumen_project_update_send_data(uint8_t *data, uint32_t length);
-  bool lumen_firmware_update_send_data(uint8_t *data, uint32_t length);  
-  void lumen_project_update_tick(uint32_t time_in_ms);
-  void lumen_project_update_finish();
+  bool lumen_firmware_update_send_data(uint8_t *data, uint32_t length);
+  void lumen_project_and_firmware_update_tick(uint32_t time_in_ms);
+  bool lumen_project_and_firmware_update_finish();
+  bool lumen_project_and_firmware_update_finish_and_reset();
 #endif
 
 #if defined(__cplusplus)

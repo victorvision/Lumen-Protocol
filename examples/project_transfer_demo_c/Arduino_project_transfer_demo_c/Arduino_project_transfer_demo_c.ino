@@ -634,7 +634,7 @@ void loop() {
       break;
     case kFinishing:
       {
-        lumen_project_update_finish();
+        lumen_project_and_firmwar_update_finish();
         sendProjectState = kFinished;
       }
       break;
@@ -646,7 +646,7 @@ void loop() {
   }
 
   if (millis() > MillisAux) {
-    lumen_project_update_tick(tickIntervalInMs);
+    lumen_project_and_firmware_update_tick(tickIntervalInMs);
     MillisAux = millis() + tickIntervalInMs;
   }
 }

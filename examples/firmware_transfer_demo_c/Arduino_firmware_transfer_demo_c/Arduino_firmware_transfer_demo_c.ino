@@ -63,8 +63,6 @@ void loop() {
 
   if (millis() > tempoTeste) {
     tempoTeste = millis() + tempoTesteIntervalo;
-
-    Serial.print("L");
   }
 
   switch (sendProjectState) {
@@ -73,13 +71,10 @@ void loop() {
 
         if (millis() > tempoTeste) {
           tempoTeste = millis() + tempoTesteIntervalo;
-
-          Serial.print("S");
         }
 
         if (sended_bytes < lumen_fw_array_size) {
           if (lumen_firmware_update_send_data(BlkToSend, sending_bytes)) {
-            Serial.print("1");
             sended_bytes += sending_bytes;
             sending_bytes = sended_bytes - lumen_fw_array_size;
 
@@ -98,11 +93,8 @@ void loop() {
       {
         if (millis() > tempoTeste) {
           tempoTeste = millis() + tempoTesteIntervalo;
-
-          Serial.print("f");
         }
-
-        lumen_project_update_finish();
+        lumen_project_and_firmwar_update_finish();
         sendProjectState = kFinished;
       }
       break;
@@ -110,8 +102,6 @@ void loop() {
       {
         if (millis() > tempoTeste) {
           tempoTeste = millis() + tempoTesteIntervalo;
-
-          Serial.print("F");
         }
       }
       break;
@@ -119,7 +109,7 @@ void loop() {
   }
 
   if (millis() > MillisAux) {
-    lumen_project_update_tick(tickIntervalInMs);
+    lumen_project_and_firmware_update_tick(tickIntervalInMs);
     MillisAux = millis() + tickIntervalInMs;
   }
 }
